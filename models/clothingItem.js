@@ -40,9 +40,10 @@ const clothingItemSchema = new mongoose.Schema({
       ref: "user",
     },
   ],
-  default: [],
   creteadAt: {
     type: Date,
     default: Date.now(),
   },
 });
+
+module.exports = mongoose.model("item", clothingItemSchema);
