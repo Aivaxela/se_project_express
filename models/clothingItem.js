@@ -13,7 +13,7 @@ const clothingItemSchema = new mongoose.Schema({
     required: true,
     minlength: 2,
     maxlength: 30,
-    weatherType: {
+    weather: {
       type: String,
       required: true,
       enum: ["hot", "warm", "cold"],

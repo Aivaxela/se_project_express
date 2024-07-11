@@ -1,10 +1,17 @@
 const User = require("../models/user");
-const { badRequest, serverError, itemNotFound } = require("../utils/errors");
+const {
+  badRequest,
+  serverError,
+  itemNotFound,
+  defaultErrorMessage,
+} = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(serverError).send({ message: err.message }));
+    .catch(() =>
+      res.status(serverError).send({ message: defaultErrorMessage })
+    );
 };
 
 module.exports.getUser = (req, res) => {
@@ -32,7 +39,7 @@ module.exports.getUser = (req, res) => {
           break;
         default:
           res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${err.message}`,
+            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
           });
           break;
       }
@@ -52,7 +59,7 @@ module.exports.createUser = (req, res) => {
         });
       } else {
         res.status(serverError).send({
-          message: `Error code: ${serverError}, Error message: ${err.message}`,
+          message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
         });
       }
     });

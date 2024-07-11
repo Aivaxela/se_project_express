@@ -1,5 +1,10 @@
 const Item = require("../models/clothingItem");
-const { badRequest, serverError, itemNotFound } = require("../utils/errors");
+const {
+  badRequest,
+  serverError,
+  itemNotFound,
+  defaultErrorMessage,
+} = require("../utils/errors");
 
 const handleIdRequest = (itemQuery, res) => {
   itemQuery
@@ -28,7 +33,7 @@ const handleIdRequest = (itemQuery, res) => {
           break;
         default:
           res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${err.message}`,
+            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
           });
           break;
       }
@@ -39,7 +44,9 @@ module.exports.getItems = (req, res) => {
   Item.find({})
     .populate("owner")
     .then((items) => res.send({ data: items }))
-    .catch((err) => res.status(serverError).send({ message: err.message }));
+    .catch(() =>
+      res.status(serverError).send({ message: defaultErrorMessage })
+    );
 };
 
 module.exports.createItem = (req, res) => {
@@ -56,7 +63,7 @@ module.exports.createItem = (req, res) => {
         });
       } else {
         res.status(serverError).send({
-          message: `Error code: ${serverError}, Error message: ${err.message}`,
+          message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
         });
       }
     });

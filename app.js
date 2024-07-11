@@ -1,6 +1,5 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const path = require("path");
 
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 
@@ -9,15 +8,6 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use((err, req, res, next) => {
-  if (err) {
-    console.error(err);
-    return res
-      .status(400)
-      .send({ message: `Error in JSON body: ${err.message}` });
-  }
-  return next();
-});
 
 app.use((req, res, next) => {
   req.user = {
@@ -28,7 +18,6 @@ app.use((req, res, next) => {
 
 app.use("/users", require("./routes/users"));
 app.use("/items", require("./routes/clothingItems"));
-
-app.use(express.static(path.join(__dirname, "public")));
+app.use(require("./routes/index"));
 
 app.listen(PORT);
