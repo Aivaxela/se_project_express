@@ -12,16 +12,55 @@ module.exports.getUser = (req, res) => {
   console.log("getting a user");
 
   User.findById(req.params.id)
-    .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(404).send({ message: "User not found" }));
+    .orFail(() => {
+      const error = new Error("User not found");
+      error.statusCode = 404;
+      error.name = "NotFoundError";
+      throw error;
+    })
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      console.error("error: " + err);
+
+      switch (err.name) {
+        case "NotFoundError":
+          res.status(err.statusCode).send({
+            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+          });
+          break;
+        case "CastError":
+          res.status(400).send({
+            message: `Error code: ${400}, Error reason: ${err.reason}`,
+          });
+          break;
+        default:
+          res.status(500).send({
+            message: `Error code: ${500}, Error message: ${err.message}`,
+          });
+          break;
+      }
+    });
 };
 
 module.exports.createUser = (req, res) => {
   console.log("creating user");
 
   const { name, avatar } = req.body;
-
   User.create({ name, avatar })
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      console.error("error: " + err);
+
+      if (err.name === "ValidationError") {
+        res.status(400).send({
+          message: `Error code: ${400}, Error message: ${err.message}`,
+        });
+      } else {
+        res.status(500).send({
+          message: `Error code: ${500}, Error message: ${err.message}`,
+        });
+      }
+    });
 };

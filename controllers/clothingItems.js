@@ -16,19 +16,53 @@ module.exports.createItem = (req, res) => {
 
   Item.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => res.send({ data: item }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      console.error("error: " + err);
+
+      if (err.name === "ValidationError") {
+        res.status(400).send({
+          message: `Error code: ${400}, Error message: ${err.message}`,
+        });
+      } else {
+        res.status(500).send({
+          message: `Error code: ${500}, Error message: ${err.message}`,
+        });
+      }
+    });
 };
 
 module.exports.deleteItem = (req, res) => {
   console.log("deleting a clothing item");
 
   Item.findByIdAndDelete(req.params.id)
-    .then((item) => res.send({ data: item }))
-    .catch(() => res.status(404).send({ message: "Item not found" }));
-};
+    .orFail(() => {
+      const error = new Error("Item not found");
+      error.statusCode = 404;
+      error.name = "NotFoundError";
+      throw error;
+    })
+    .then((item) => {
+      res.send({ data: item });
+    })
+    .catch((err) => {
+      console.error("error: " + err);
 
-const sendData = (item, res, statusCode, statusMessage) => {
-  res
-    .send({ data: item })
-    .catch((err) => res.status(statusCode).send({ message: statusMessage }));
+      switch (err.name) {
+        case "NotFoundError":
+          res.status(err.statusCode).send({
+            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+          });
+          break;
+        case "CastError":
+          res.status(400).send({
+            message: `Error code: ${400}, Error reason: ${err.reason}`,
+          });
+          break;
+        default:
+          res.status(500).send({
+            message: `Error code: ${500}, Error message: ${err.message}`,
+          });
+          break;
+      }
+    });
 };

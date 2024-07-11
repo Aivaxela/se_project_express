@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
-const bodyParser = require("body-parser");
 
 mongoose
   .connect("mongodb://127.0.0.1:27017/wtwr_db")
@@ -11,8 +10,19 @@ mongoose
 const { PORT = 3001 } = process.env;
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+//
+//
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use((err, req, res, next) => {
+  if (err) {
+    console.error(err);
+    return res
+      .status(400)
+      .send({ message: `Error in JSON body: ${err.message}` });
+  }
+  next();
+});
 
 //temporary user id for clothing item creation
 app.use((req, res, next) => {
