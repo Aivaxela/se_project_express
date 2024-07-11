@@ -1,11 +1,12 @@
 const User = require("../models/user");
+const { badRequest, serverError, itemNotFound } = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
   console.log("getting users");
 
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => res.status(serverError).send({ message: err.message }));
 };
 
 module.exports.getUser = (req, res) => {
@@ -14,7 +15,7 @@ module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
     .orFail(() => {
       const error = new Error("User not found");
-      error.statusCode = 404;
+      error.statusCode = itemNotFound;
       error.name = "NotFoundError";
       throw error;
     })
@@ -31,13 +32,13 @@ module.exports.getUser = (req, res) => {
           });
           break;
         case "CastError":
-          res.status(400).send({
-            message: `Error code: ${400}, Error reason: ${err.reason}`,
+          res.status(badRequest).send({
+            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
           });
           break;
         default:
-          res.status(500).send({
-            message: `Error code: ${500}, Error message: ${err.message}`,
+          res.status(serverError).send({
+            message: `Error code: ${serverError}, Error message: ${err.message}`,
           });
           break;
       }
@@ -54,12 +55,12 @@ module.exports.createUser = (req, res) => {
       console.error("error: " + err);
 
       if (err.name === "ValidationError") {
-        res.status(400).send({
-          message: `Error code: ${400}, Error message: ${err.message}`,
+        res.status(badRequest).send({
+          message: `Error code: ${badRequest}, Error message: ${err.message}`,
         });
       } else {
-        res.status(500).send({
-          message: `Error code: ${500}, Error message: ${err.message}`,
+        res.status(serverError).send({
+          message: `Error code: ${serverError}, Error message: ${err.message}`,
         });
       }
     });

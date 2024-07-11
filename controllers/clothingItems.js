@@ -1,4 +1,5 @@
 const Item = require("../models/clothingItem");
+const { badRequest, serverError, itemNotFound } = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
   console.log("getting clothing items");
@@ -6,7 +7,7 @@ module.exports.getItems = (req, res) => {
   Item.find({})
     .populate("owner")
     .then((items) => res.send({ data: items }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => res.status(serverError).send({ message: err.message }));
 };
 
 module.exports.createItem = (req, res) => {
@@ -20,12 +21,12 @@ module.exports.createItem = (req, res) => {
       console.error("error: " + err);
 
       if (err.name === "ValidationError") {
-        res.status(400).send({
-          message: `Error code: ${400}, Error message: ${err.message}`,
+        res.status(badRequest).send({
+          message: `Error code: ${badRequest}, Error message: ${err.message}`,
         });
       } else {
-        res.status(500).send({
-          message: `Error code: ${500}, Error message: ${err.message}`,
+        res.status(serverError).send({
+          message: `Error code: ${serverError}, Error message: ${err.message}`,
         });
       }
     });
@@ -34,10 +35,33 @@ module.exports.createItem = (req, res) => {
 module.exports.deleteItem = (req, res) => {
   console.log("deleting a clothing item");
 
-  Item.findByIdAndDelete(req.params.id)
+  const itemQuery = Item.findByIdAndDelete(req.params.id);
+  handleIdRequest(itemQuery, res);
+};
+
+module.exports.likeItem = (req, res) => {
+  const itemQuery = Item.findByIdAndUpdate(
+    req.params.id,
+    { $addToSet: { likes: req.user._id } },
+    { new: true }
+  );
+  handleIdRequest(itemQuery, res);
+};
+
+module.exports.dislikeItem = (req, res) => {
+  const itemQuery = Item.findByIdAndUpdate(
+    req.params.id,
+    { $pull: { likes: req.user._id } },
+    { new: true }
+  );
+  handleIdRequest(itemQuery, res);
+};
+
+const handleIdRequest = (itemQuery, res) => {
+  itemQuery
     .orFail(() => {
       const error = new Error("Item not found");
-      error.statusCode = 404;
+      error.statusCode = itemNotFound;
       error.name = "NotFoundError";
       throw error;
     })
@@ -54,13 +78,13 @@ module.exports.deleteItem = (req, res) => {
           });
           break;
         case "CastError":
-          res.status(400).send({
-            message: `Error code: ${400}, Error reason: ${err.reason}`,
+          res.status(badRequest).send({
+            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
           });
           break;
         default:
-          res.status(500).send({
-            message: `Error code: ${500}, Error message: ${err.message}`,
+          res.status(serverError).send({
+            message: `Error code: ${serverError}, Error message: ${err.message}`,
           });
           break;
       }
