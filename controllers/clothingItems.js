@@ -1,9 +1,41 @@
 const Item = require("../models/clothingItem");
 const { badRequest, serverError, itemNotFound } = require("../utils/errors");
 
-module.exports.getItems = (req, res) => {
-  console.log("getting clothing items");
+const handleIdRequest = (itemQuery, res) => {
+  itemQuery
+    .orFail(() => {
+      const error = new Error("Item not found");
+      error.statusCode = itemNotFound;
+      error.name = "NotFoundError";
+      throw error;
+    })
+    .then((item) => {
+      res.send({ data: item });
+    })
+    .catch((err) => {
+      console.error(err);
 
+      switch (err.name) {
+        case "NotFoundError":
+          res.status(err.statusCode).send({
+            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+          });
+          break;
+        case "CastError":
+          res.status(badRequest).send({
+            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
+          });
+          break;
+        default:
+          res.status(serverError).send({
+            message: `Error code: ${serverError}, Error message: ${err.message}`,
+          });
+          break;
+      }
+    });
+};
+
+module.exports.getItems = (req, res) => {
   Item.find({})
     .populate("owner")
     .then((items) => res.send({ data: items }))
@@ -11,14 +43,12 @@ module.exports.getItems = (req, res) => {
 };
 
 module.exports.createItem = (req, res) => {
-  console.log("creating clothing item");
-
-  const { name, weather, imageUrl, ownerId } = req.body;
+  const { name, weather, imageUrl } = req.body;
 
   Item.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => res.send({ data: item }))
     .catch((err) => {
-      console.error("error: " + err);
+      console.error(err);
 
       if (err.name === "ValidationError") {
         res.status(badRequest).send({
@@ -33,8 +63,6 @@ module.exports.createItem = (req, res) => {
 };
 
 module.exports.deleteItem = (req, res) => {
-  console.log("deleting a clothing item");
-
   const itemQuery = Item.findByIdAndDelete(req.params.id);
   handleIdRequest(itemQuery, res);
 };
@@ -55,38 +83,4 @@ module.exports.dislikeItem = (req, res) => {
     { new: true }
   );
   handleIdRequest(itemQuery, res);
-};
-
-const handleIdRequest = (itemQuery, res) => {
-  itemQuery
-    .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
-    })
-    .then((item) => {
-      res.send({ data: item });
-    })
-    .catch((err) => {
-      console.error("error: " + err);
-
-      switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
-          break;
-        case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
-          break;
-        default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${err.message}`,
-          });
-          break;
-      }
-    });
 };

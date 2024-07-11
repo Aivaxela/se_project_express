@@ -2,16 +2,12 @@ const User = require("../models/user");
 const { badRequest, serverError, itemNotFound } = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
-  console.log("getting users");
-
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch((err) => res.status(serverError).send({ message: err.message }));
 };
 
 module.exports.getUser = (req, res) => {
-  console.log("getting a user");
-
   User.findById(req.params.id)
     .orFail(() => {
       const error = new Error("User not found");
@@ -23,8 +19,6 @@ module.exports.getUser = (req, res) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      console.error("error: " + err);
-
       switch (err.name) {
         case "NotFoundError":
           res.status(err.statusCode).send({
@@ -46,13 +40,11 @@ module.exports.getUser = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  console.log("creating user");
-
   const { name, avatar } = req.body;
   User.create({ name, avatar })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      console.error("error: " + err);
+      console.error(err);
 
       if (err.name === "ValidationError") {
         res.status(badRequest).send({
