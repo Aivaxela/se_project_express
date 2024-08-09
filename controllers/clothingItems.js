@@ -3,9 +3,11 @@ const Item = require("../models/clothingItem");
 
 const {
   badRequest,
+  forbidden,
   serverError,
   itemNotFound,
   defaultErrorMessage,
+  forbiddenErrorMessage,
 } = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
@@ -38,12 +40,46 @@ module.exports.createItem = (req, res) => {
 };
 
 module.exports.deleteItem = (req, res) => {
-  const userIdOBjectId = mongoose.Types.ObjectId(req.user._id);
-  const itemQuery = Item.findByIdAndDelete({
-    _id: req.params.id,
-    owner: userIdOBjectId,
-  });
-  handleIdRequest(itemQuery, res);
+  const requestingUser = req.user._id;
+
+  const itemQuery = Item.findById(req.params.id)
+    .orFail(() => {
+      const error = new Error("Item not found");
+      error.statusCode = itemNotFound;
+      error.name = "NotFoundError";
+      throw error;
+    })
+    .then((item) => {
+      const itemOwner = mongoose.Types.ObjectId(item.owner).toString();
+
+      if (requestingUser === itemOwner) {
+        const itemQuery = Item.findByIdAndDelete({
+          _id: req.params.id,
+        });
+        handleRequest(itemQuery, res);
+      } else {
+        res.status(forbidden).send({
+          message: `Error code: ${forbidden}, Error message: ${forbiddenErrorMessage}`,
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err.name);
+
+      if (err.name === "CastError") {
+        res.status(badRequest).send({
+          message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
+        });
+      } else if (err.name === "NotFoundError") {
+        res.status(err.statusCode).send({
+          message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+        });
+      } else {
+        res.status(badRequest).send({
+          message: `Error code: ${badRequest}, Error message: ${defaultErrorMessage}`,
+        });
+      }
+    });
 };
 
 module.exports.likeItem = (req, res) => {
@@ -52,7 +88,7 @@ module.exports.likeItem = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true }
   );
-  handleIdRequest(itemQuery, res);
+  handleRequest(itemQuery, res);
 };
 
 module.exports.dislikeItem = (req, res) => {
@@ -61,10 +97,10 @@ module.exports.dislikeItem = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   );
-  handleIdRequest(itemQuery, res);
+  handleRequest(itemQuery, res);
 };
 
-const handleIdRequest = (itemQuery, res) => {
+const handleRequest = (itemQuery, res) => {
   itemQuery
     .orFail(() => {
       const error = new Error("Item not found");

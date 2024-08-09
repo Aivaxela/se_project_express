@@ -4,29 +4,27 @@ const User = require("../models/user");
 
 const {
   badRequest,
-  unauthorized,
   serverError,
   itemNotFound,
   duplicateItem,
   defaultErrorMessage,
   duplicateEmailErrorMessage,
-  signinFailMessage,
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
       res.send({ token });
     })
-    .catch(() => {
-      res.status(unauthorized).send({
-        message: `Error code: ${unauthorized}, Error message: ${signinFailMessage}`,
+    .catch((err) => {
+      res.status(err.statusCode).send({
+        message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
       });
     });
 };
@@ -36,7 +34,14 @@ module.exports.createUser = (req, res) => {
 
   bcrypt.hash(password, 10).then((hash) =>
     User.create({ name, avatar, email, password: hash })
-      .then((user) => res.send({ data: user }))
+      .then((user) => {
+        const protectedUser = {
+          name: user.name,
+          avatar: user.avatar,
+          email: user.email,
+        };
+        res.send({ data: protectedUser });
+      })
       .catch((err) => {
         console.error(err);
 
@@ -58,78 +63,24 @@ module.exports.createUser = (req, res) => {
 };
 
 module.exports.getCurrentUser = (req, res) => {
-  User.findById(req.user._id)
-    .orFail(() => {
-      const error = new Error("User not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
-    })
-    .then((user) => {
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
-          break;
-        case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
-          break;
-        default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
-          break;
-      }
-    });
+  const userQuery = User.findById(req.user._id);
+  handleRequest(userQuery, res);
 };
 
 module.exports.updateProfile = (req, res) => {
-  User.findByIdAndUpdate(
+  const userQuery = User.findByIdAndUpdate(
     req.user._id,
     {
       name: req.body.name,
       avatar: req.body.avatar,
     },
-    { returnDocument: "after" }
-  )
-    .orFail(() => {
-      const error = new Error("User not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
-    })
-    .then((user) => {
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
-          break;
-        case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
-          break;
-        default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
-          break;
-      }
-    });
+    { returnDocument: "after", runValidators: true }
+  );
+  handleRequest(userQuery, res);
 };
 
-const handleIdRequest = (itemQuery, res) => {
-  itemQuery
+const handleRequest = (userQuery, res) => {
+  userQuery
     .orFail(() => {
       const error = new Error("Item not found");
       error.statusCode = itemNotFound;
@@ -151,6 +102,17 @@ const handleIdRequest = (itemQuery, res) => {
         case "CastError":
           res.status(badRequest).send({
             message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
+          });
+          break;
+        case "MongoServerError":
+          if (err.code === 11000)
+            res.status(duplicateItem).send({
+              message: `Error code: ${duplicateItem}, Error reason: ${duplicateEmailErrorMessage}`,
+            });
+          break;
+        case "ValidationError":
+          res.status(badRequest).send({
+            message: `Error code: ${badRequest}, Error message: ${err.message}`,
           });
           break;
         default:
