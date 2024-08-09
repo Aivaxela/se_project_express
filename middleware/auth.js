@@ -14,7 +14,7 @@ module.exports.auth = (req, res, next) => {
   try {
     payload = jwt.verify(token, JWT_SECRET);
     req.user = payload;
-    next();
+    return next();
   } catch (error) {
     return res.status(401).send({ message: "Authorization required" });
   }

@@ -12,6 +12,51 @@ const {
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
+const handleRequest = (userQuery, res) => {
+  userQuery
+    .orFail(() => {
+      const error = new Error("Item not found");
+      error.statusCode = itemNotFound;
+      error.name = "NotFoundError";
+      throw error;
+    })
+    .then((item) => {
+      res.send({ data: item });
+    })
+    .catch((err) => {
+      console.error(err);
+
+      switch (err.name) {
+        case "NotFoundError":
+          res.status(err.statusCode).send({
+            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+          });
+          break;
+        case "CastError":
+          res.status(badRequest).send({
+            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
+          });
+          break;
+        case "MongoServerError":
+          if (err.code === 11000)
+            res.status(duplicateItem).send({
+              message: `Error code: ${duplicateItem}, Error reason: ${duplicateEmailErrorMessage}`,
+            });
+          break;
+        case "ValidationError":
+          res.status(badRequest).send({
+            message: `Error code: ${badRequest}, Error message: ${err.message}`,
+          });
+          break;
+        default:
+          res.status(serverError).send({
+            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
+          });
+          break;
+      }
+    });
+};
+
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
@@ -77,49 +122,4 @@ module.exports.updateProfile = (req, res) => {
     { returnDocument: "after", runValidators: true }
   );
   handleRequest(userQuery, res);
-};
-
-const handleRequest = (userQuery, res) => {
-  userQuery
-    .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
-    })
-    .then((item) => {
-      res.send({ data: item });
-    })
-    .catch((err) => {
-      console.error(err);
-
-      switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
-          break;
-        case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
-          break;
-        case "MongoServerError":
-          if (err.code === 11000)
-            res.status(duplicateItem).send({
-              message: `Error code: ${duplicateItem}, Error reason: ${duplicateEmailErrorMessage}`,
-            });
-          break;
-        case "ValidationError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error message: ${err.message}`,
-          });
-          break;
-        default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
-          break;
-      }
-    });
 };

@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
-const { baseModelName } = require("./clothingItem");
 const {
   badRequest,
   defaultErrorMessage,
@@ -53,27 +52,26 @@ userSchema.statics.findUserByCredentials = function (email, password) {
     error.statusCode = badRequest;
     error.message = defaultErrorMessage;
     return Promise.reject(error);
-  } else {
-    const signInError = new Error(unauthorized);
-    signInError.statusCode = unauthorized;
-    signInError.message = signinFailMessage;
+  }
+  const signInError = new Error(unauthorized);
+  signInError.statusCode = unauthorized;
+  signInError.message = signinFailMessage;
 
-    return this.findOne({ email })
-      .select("+password")
-      .then((user) => {
-        if (!user) {
+  return this.findOne({ email })
+    .select("+password")
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(signInError);
+      }
+
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
           return Promise.reject(signInError);
         }
 
-        return bcrypt.compare(password, user.password).then((matched) => {
-          if (!matched) {
-            return Promise.reject(signInError);
-          }
-
-          return user;
-        });
+        return user;
       });
-  }
+    });
 };
 
 module.exports = mongoose.model("user", userSchema);
