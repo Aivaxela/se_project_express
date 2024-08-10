@@ -14,6 +14,5 @@ app.use(cors());
 app.use("/users", require("./routes/users"));
 app.use("/items", require("./routes/clothingItems"));
 app.use("/", require("./routes/index"));
-app.use(require("./routes/index"));
 
 app.listen(PORT);

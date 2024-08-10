@@ -37,12 +37,6 @@ const handleRequest = (userQuery, res) => {
             message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
           });
           break;
-        case "MongoServerError":
-          if (err.code === 11000)
-            res.status(duplicateItem).send({
-              message: `Error code: ${duplicateItem}, Error reason: ${duplicateEmailErrorMessage}`,
-            });
-          break;
         case "ValidationError":
           res.status(badRequest).send({
             message: `Error code: ${badRequest}, Error message: ${err.message}`,
@@ -68,9 +62,15 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res.status(err.statusCode).send({
-        message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-      });
+      if (err.statusCode) {
+        res.status(err.statusCode).send({
+          message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+        });
+      } else {
+        res.status(serverError).send({
+          message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
+        });
+      }
     });
 };
 

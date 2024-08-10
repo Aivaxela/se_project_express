@@ -46,7 +46,10 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.statics.findUserByCredentials = function (email, password) {
+userSchema.statics.findUserByCredentials = function findUserByCredentials(
+  email,
+  password
+) {
   if (!email || !password) {
     const error = new Error(badRequest);
     error.statusCode = badRequest;
