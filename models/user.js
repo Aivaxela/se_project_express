@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
     select: false,
   },
-  avatar: {
+  avatarUrl: {
     type: String,
     required: true,
     validate: {

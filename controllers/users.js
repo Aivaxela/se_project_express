@@ -75,14 +75,14 @@ module.exports.login = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, avatar, email, password } = req.body;
+  const { name, avatarUrl, email, password } = req.body;
 
   bcrypt.hash(password, 10).then((hash) =>
-    User.create({ name, avatar, email, password: hash })
+    User.create({ name, avatarUrl, email, password: hash })
       .then((user) => {
         const protectedUser = {
           name: user.name,
-          avatar: user.avatar,
+          avatarUrl: user.avatarUrl,
           email: user.email,
         };
         res.send({ data: protectedUser });
@@ -117,7 +117,7 @@ module.exports.updateProfile = (req, res) => {
     req.user._id,
     {
       name: req.body.name,
-      avatar: req.body.avatar,
+      avatarUrl: req.body.avatarUrl,
     },
     { returnDocument: "after", runValidators: true }
   );

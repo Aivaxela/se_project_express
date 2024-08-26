@@ -9,7 +9,7 @@ const {
 const { auth } = require("../middleware/auth");
 
 router.get("/", getItems);
-router.post("/", createItem);
+router.post("/", createItem); //TODO: readd auth here
 router.delete("/:id", auth, deleteItem);
 router.put("/:id/likes", auth, likeItem);
 router.delete("/:id/likes", auth, dislikeItem);
