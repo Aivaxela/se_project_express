@@ -87,12 +87,15 @@ module.exports.createUser = (req, res) => {
   bcrypt.hash(password, 10).then((hash) =>
     User.create({ name, avatarUrl, email, password: hash })
       .then((user) => {
-        const protectedUser = {
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+        res.send({
+          token: token,
           name: user.name,
           avatarUrl: user.avatarUrl,
           email: user.email,
-        };
-        res.send({ data: protectedUser });
+        });
       })
       .catch((err) => {
         console.error(err);
