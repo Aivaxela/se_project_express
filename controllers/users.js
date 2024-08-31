@@ -62,10 +62,10 @@ module.exports.login = (req, res) => {
       });
       const id = mongoose.Types.ObjectId(user._id).toString();
       res.send({
-        token: token,
+        token,
         name: user.name,
         avatarUrl: user.avatarUrl,
-        id: id,
+        id,
       });
     })
     .catch((err) => {
@@ -91,7 +91,7 @@ module.exports.createUser = (req, res) => {
           expiresIn: "7d",
         });
         res.send({
-          token: token,
+          token,
           name: user.name,
           avatarUrl: user.avatarUrl,
           email: user.email,
