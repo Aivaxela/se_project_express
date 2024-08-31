@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
@@ -59,7 +60,13 @@ module.exports.login = (req, res) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      res.send({ token, user });
+      const id = mongoose.Types.ObjectId(user._id).toString();
+      res.send({
+        token: token,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+        id: id,
+      });
     })
     .catch((err) => {
       if (err.statusCode) {
