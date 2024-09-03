@@ -57,7 +57,16 @@ module.exports.createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
   Item.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) => res.send({ data: item }))
+    .then((item) => {
+      return Item.findById(item._id).populate("owner", {
+        name: 1,
+        _id: 1,
+        imageUrl: 1,
+      });
+    })
+    .then((populatedItem) => {
+      res.send({ data: populatedItem });
+    })
     .catch((err) => {
       console.error(err);
 
@@ -128,6 +137,6 @@ module.exports.dislikeItem = (req, res) => {
     req.params.id,
     { $pull: { likes: req.user._id } },
     { new: true }
-  ).populate("owner", { name: 1, _id: 1, imageUrl: 1 });
+  ).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
   handleRequest(itemQuery, res);
 };
