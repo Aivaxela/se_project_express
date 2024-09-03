@@ -86,19 +86,21 @@ module.exports.deleteItem = (req, res) => {
   const requestingUser = req.user._id;
 
   Item.findById(req.params.id)
+
     .orFail(() => {
       const error = new Error("Item not found");
       error.statusCode = itemNotFound;
       error.name = "NotFoundError";
       throw error;
     })
+
     .then((item) => {
       const itemOwner = mongoose.Types.ObjectId(item.owner).toString();
 
       if (requestingUser === itemOwner) {
         const itemQuery = Item.findByIdAndDelete({
           _id: req.params.id,
-        });
+        }).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
         handleRequest(itemQuery, res);
       } else {
         res.status(forbidden).send({
