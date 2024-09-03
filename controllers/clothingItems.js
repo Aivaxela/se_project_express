@@ -46,7 +46,7 @@ const handleRequest = (itemQuery, res) => {
 
 module.exports.getItems = (req, res) => {
   Item.find({})
-    .populate("owner")
+    .populate("owner", { name: 1, _id: 1, imageUrl: 1 })
     .then((items) => res.send({ data: items }))
     .catch(() =>
       res.status(serverError).send({ message: defaultErrorMessage })
@@ -119,7 +119,7 @@ module.exports.likeItem = (req, res) => {
     req.params.id,
     { $addToSet: { likes: req.user._id } },
     { new: true }
-  );
+  ).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
   handleRequest(itemQuery, res);
 };
 
@@ -128,6 +128,6 @@ module.exports.dislikeItem = (req, res) => {
     req.params.id,
     { $pull: { likes: req.user._id } },
     { new: true }
-  );
+  ).populate("owner", { name: 1, _id: 1, imageUrl: 1 });
   handleRequest(itemQuery, res);
 };
