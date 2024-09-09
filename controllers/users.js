@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const NotFoundError = require("../errors/not-found-error");
 
 const {
   badRequest,
