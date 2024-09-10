@@ -9,4 +9,7 @@ module.exports = {
   duplicateEmailErrorMessage: "This email address already exists",
   forbiddenErrorMessage: "Action forbidden",
   signinFailMessage: "Incorrect email or password",
+  userNotFoundMessage: "User not found",
+  castErrorMessage: "Invalid data format",
+  validationErrorMessage: "Data failed validation",
 };

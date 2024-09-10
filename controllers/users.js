@@ -2,58 +2,47 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const NotFoundError = require("../errors/not-found-error");
+const NotFoundError = require("../errors/not-found");
+const BadRequestError = require("../errors/bad-request");
+const SignInFailError = require("../errors/signin-fail");
 
 const {
   badRequest,
   serverError,
-  itemNotFound,
   duplicateItem,
   defaultErrorMessage,
   duplicateEmailErrorMessage,
+  userNotFoundMessage,
+  castErrorMessage,
+  validationErrorMessage,
+  signinFailMessage,
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
-const handleRequest = (userQuery, res) => {
+const handleRequest = (userQuery, res, next) => {
   userQuery
     .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
+      throw new NotFoundError(userNotFoundMessage);
     })
     .then((item) => {
       res.send({ data: item });
     })
     .catch((err) => {
-      console.error(err);
-
       switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
-          break;
         case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
+          next(new BadRequestError(castErrorMessage));
           break;
         case "ValidationError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error message: ${err.message}`,
-          });
+          next(new BadRequestError(validationErrorMessage));
           break;
         default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
+          next(err);
           break;
       }
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   User.findUserByCredentials(email, password)
@@ -69,17 +58,7 @@ module.exports.login = (req, res) => {
         id,
       });
     })
-    .catch((err) => {
-      if (err.statusCode) {
-        res.status(err.statusCode).send({
-          message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-        });
-      } else {
-        res.status(serverError).send({
-          message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-        });
-      }
-    });
+    .catch(next);
 };
 
 module.exports.createUser = (req, res) => {
@@ -118,9 +97,9 @@ module.exports.createUser = (req, res) => {
   );
 };
 
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
   const userQuery = User.findById(req.user._id);
-  handleRequest(userQuery, res);
+  handleRequest(userQuery, res, next);
 };
 
 module.exports.updateProfile = (req, res) => {
