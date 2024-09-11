@@ -4,29 +4,22 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const NotFoundError = require("../errors/not-found");
 const BadRequestError = require("../errors/bad-request");
-const SignInFailError = require("../errors/signin-fail");
+const DuplicateItemError = require("../errors/duplicate-item");
 
 const {
-  badRequest,
-  serverError,
-  duplicateItem,
-  defaultErrorMessage,
   duplicateEmailErrorMessage,
   userNotFoundMessage,
   castErrorMessage,
   validationErrorMessage,
-  signinFailMessage,
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
-const handleRequest = (userQuery, res, next) => {
+const handleFindReq = (userQuery, req, next) =>
   userQuery
     .orFail(() => {
       throw new NotFoundError(userNotFoundMessage);
     })
-    .then((item) => {
-      res.send({ data: item });
-    })
+    .then((item) => item)
     .catch((err) => {
       switch (err.name) {
         case "CastError":
@@ -40,7 +33,6 @@ const handleRequest = (userQuery, res, next) => {
           break;
       }
     });
-};
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
@@ -61,7 +53,24 @@ module.exports.login = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
+  const userQuery = User.findById(req.user._id);
+  handleFindReq(userQuery, res, next).then((item) => res.send({ data: item }));
+};
+
+module.exports.updateProfile = (req, res, next) => {
+  const userQuery = User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name: req.body.name,
+      avatarUrl: req.body.avatarUrl,
+    },
+    { returnDocument: "after", runValidators: true }
+  );
+  handleFindReq(userQuery, res, next).then((item) => res.send({ data: item }));
+};
+
+module.exports.createUser = (req, res, next) => {
   const { name, avatarUrl, email, password } = req.body;
 
   bcrypt.hash(password, 10).then((hash) =>
@@ -81,35 +90,12 @@ module.exports.createUser = (req, res) => {
         console.error(err);
 
         if (err.name === "ValidationError") {
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error message: ${err.message}`,
-          });
+          next(new BadRequestError(validationErrorMessage));
         } else if (err.code === 11000) {
-          res.status(duplicateItem).send({
-            message: `Error code: ${duplicateItem}, Error message: ${duplicateEmailErrorMessage}`,
-          });
+          next(new DuplicateItemError(duplicateEmailErrorMessage));
         } else {
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
+          next(err);
         }
       })
   );
-};
-
-module.exports.getCurrentUser = (req, res, next) => {
-  const userQuery = User.findById(req.user._id);
-  handleRequest(userQuery, res, next);
-};
-
-module.exports.updateProfile = (req, res) => {
-  const userQuery = User.findByIdAndUpdate(
-    req.user._id,
-    {
-      name: req.body.name,
-      avatarUrl: req.body.avatarUrl,
-    },
-    { returnDocument: "after", runValidators: true }
-  );
-  handleRequest(userQuery, res);
 };

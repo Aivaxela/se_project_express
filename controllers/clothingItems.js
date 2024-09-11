@@ -57,13 +57,13 @@ module.exports.createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
   Item.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) => {
-      return Item.findById(item._id).populate("owner", {
+    .then((item) =>
+      Item.findById(item._id).populate("owner", {
         name: 1,
         _id: 1,
         imageUrl: 1,
-      });
-    })
+      })
+    )
     .then((populatedItem) => {
       res.send({ data: populatedItem });
     })

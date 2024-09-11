@@ -6,6 +6,7 @@ module.exports = {
   duplicateItem: 409,
   serverError: 500,
   defaultErrorMessage: "An error has occurred on the server",
+  badRequestErrorMessage: "Bad request",
   duplicateEmailErrorMessage: "This email address already exists",
   forbiddenErrorMessage: "Action forbidden",
   signinFailMessage: "Incorrect email or password",
