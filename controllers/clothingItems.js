@@ -1,85 +1,64 @@
 const mongoose = require("mongoose");
 const Item = require("../models/clothingItem");
+const NotFoundError = require("../errors/not-found");
+const BadRequestError = require("../errors/bad-request");
+const DuplicateItemError = require("../errors/duplicate-item");
 
 const {
-  badRequest,
-  forbidden,
-  serverError,
-  itemNotFound,
   defaultErrorMessage,
   forbiddenErrorMessage,
+  duplicateEmailErrorMessage,
+  itemNotFoundMessage,
+  castErrorMessage,
+  validationErrorMessage,
 } = require("../utils/errors");
 
-const handleRequest = (itemQuery, res) => {
+//TODO: refactor controllers to remove handleFindReq functions
+
+const handleFindReq = (itemQuery, req, next) =>
   itemQuery
     .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
+      throw new NotFoundError(itemNotFoundMessage);
     })
-    .then((item) => {
-      res.send({ data: item });
-    })
+    .then((item) => item)
     .catch((err) => {
-      console.error(err);
-
       switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
+        case "ValidationError":
+          next(new BadRequestError(validationErrorMessage));
           break;
         case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
+          next(new BadRequestError(castErrorMessage));
           break;
         default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
+          next(err);
           break;
       }
     });
+
+module.exports.getItems = (req, res, next) => {
+  const itemQuery = Item.find({}).populate("owner", {
+    name: 1,
+    _id: 1,
+    imageUrl: 1,
+  });
+  handleFindReq(itemQuery, req, next).then((items) =>
+    res.send({ data: items })
+  );
 };
 
-module.exports.getItems = (req, res) => {
-  Item.find({})
-    .populate("owner", { name: 1, _id: 1, imageUrl: 1 })
-    .then((items) => res.send({ data: items }))
-    .catch(() =>
-      res.status(serverError).send({ message: defaultErrorMessage })
-    );
-};
-
-module.exports.createItem = (req, res) => {
+module.exports.createItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
 
-  Item.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) =>
-      Item.findById(item._id).populate("owner", {
-        name: 1,
-        _id: 1,
-        imageUrl: 1,
-      })
-    )
-    .then((populatedItem) => {
-      res.send({ data: populatedItem });
-    })
-    .catch((err) => {
-      console.error(err);
-
-      if (err.name === "ValidationError") {
-        res.status(badRequest).send({
-          message: `Error code: ${badRequest}, Error message: ${err.message}`,
-        });
-      } else {
-        res.status(serverError).send({
-          message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-        });
-      }
+  Item.create({ name, weather, imageUrl, owner: req.user._id }).then((item) => {
+    const itemQuery = Item.findById(item._id).populate("owner", {
+      name: 1,
+      _id: 1,
+      imageUrl: 1,
     });
+    handleFindReq(itemQuery, req, next).then((item) => {
+      if (item) res.send({ data: item });
+    });
+  });
 };
 
 module.exports.deleteItem = (req, res) => {
@@ -101,7 +80,7 @@ module.exports.deleteItem = (req, res) => {
         const itemQuery = Item.findByIdAndDelete({
           _id: req.params.id,
         }).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
-        handleRequest(itemQuery, res);
+        handleFindReq(itemQuery, res);
       } else {
         res.status(forbidden).send({
           message: `Error code: ${forbidden}, Error message: ${forbiddenErrorMessage}`,
@@ -131,7 +110,7 @@ module.exports.likeItem = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true }
   ).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
-  handleRequest(itemQuery, res);
+  handleFindReq(itemQuery, res);
 };
 
 module.exports.dislikeItem = (req, res) => {
@@ -140,5 +119,5 @@ module.exports.dislikeItem = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   ).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
-  handleRequest(itemQuery, res);
+  handleFindReq(itemQuery, res);
 };

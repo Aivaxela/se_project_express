@@ -11,6 +11,7 @@ module.exports = {
   forbiddenErrorMessage: "Action forbidden",
   signinFailMessage: "Incorrect email or password",
   userNotFoundMessage: "User not found",
+  itemNotFoundMessage: "Item not found",
   castErrorMessage: "Invalid data format",
   validationErrorMessage: "Data failed validation",
 };

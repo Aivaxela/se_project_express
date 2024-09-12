@@ -14,6 +14,8 @@ const {
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
+//TODO: refactor controllers to remove handleFindReq functions
+
 const handleFindReq = (userQuery, req, next) =>
   userQuery
     .orFail(() => {
@@ -34,6 +36,27 @@ const handleFindReq = (userQuery, req, next) =>
       }
     });
 
+module.exports.getCurrentUser = (req, res, next) => {
+  const userQuery = User.findById(req.user._id);
+  handleFindReq(userQuery, res, next).then((item) => {
+    if (item) res.send({ data: item });
+  });
+};
+
+module.exports.updateProfile = (req, res, next) => {
+  const userQuery = User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name: req.body.name,
+      avatarUrl: req.body.avatarUrl,
+    },
+    { returnDocument: "after", runValidators: true }
+  );
+  handleFindReq(userQuery, res, next).then((item) => {
+    if (item) res.send({ data: item });
+  });
+};
+
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
@@ -51,23 +74,6 @@ module.exports.login = (req, res, next) => {
       });
     })
     .catch(next);
-};
-
-module.exports.getCurrentUser = (req, res, next) => {
-  const userQuery = User.findById(req.user._id);
-  handleFindReq(userQuery, res, next).then((item) => res.send({ data: item }));
-};
-
-module.exports.updateProfile = (req, res, next) => {
-  const userQuery = User.findByIdAndUpdate(
-    req.user._id,
-    {
-      name: req.body.name,
-      avatarUrl: req.body.avatarUrl,
-    },
-    { returnDocument: "after", runValidators: true }
-  );
-  handleFindReq(userQuery, res, next).then((item) => res.send({ data: item }));
 };
 
 module.exports.createUser = (req, res, next) => {
