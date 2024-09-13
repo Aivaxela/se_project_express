@@ -1,15 +1,11 @@
 module.exports = {
-  badRequestErrorCode: 400,
   castErrorMessage: "Invalid data format",
   validationErrorMessage: "Data failed validation",
   dataMissingErrorMessage: "Required data missing",
-  unauthorizedErrorCode: 401,
   signinFailErrorMessage: "Incorrect email or password",
-  itemNotFoundErrorCode: 404,
+  forbiddenErrorMessage: "Forbidden action",
   userNotFoundMessage: "User not found",
   itemNotFoundMessage: "Item not found",
-  duplicateItemErrorCode: 409,
   duplicateEmailErrorMessage: "This email address already exists",
-  defaultErrorErrorCode: 500,
   defaultErrorMessage: "An error has occurred on the server",
 };

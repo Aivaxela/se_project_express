@@ -1,5 +1,7 @@
 const BadRequestError = require("../errors/bad-request");
 const DuplicateItemError = require("../errors/duplicate-item");
+const SignInFailError = require("../errors/signin-fail");
+const ForbiddenError = require("../errors/forbidden");
 const {
   castErrorMessage,
   validationErrorMessage,
@@ -7,8 +9,8 @@ const {
   duplicateEmailErrorMessage,
   defaultErrorMessage,
   dataMissingErrorMessage,
+  forbiddenErrorMessage,
 } = require("../utils/errors-messages-statuses");
-const SignInFailError = require("../errors/signin-fail");
 
 module.exports.errorHandler = (err, req, res, next) => {
   console.log(err);
@@ -25,11 +27,13 @@ module.exports.errorHandler = (err, req, res, next) => {
       throw new SignInFailError(signinFailErrorMessage);
     case "DataMissing":
       throw new BadRequestError(dataMissingErrorMessage);
+    case "Forbidden":
+      throw new ForbiddenError(forbiddenErrorMessage);
     default:
-      const { statusCode = 500, message } = err;
-      res.status(statusCode).send({
-        message: statusCode === 500 ? defaultErrorMessage : message,
-      });
       break;
   }
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+    message: statusCode === 500 ? defaultErrorMessage : message,
+  });
 };

@@ -6,8 +6,6 @@ const NotFoundError = require("../errors/not-found");
 const { JWT_SECRET } = require("../utils/config");
 const { userNotFoundMessage } = require("../utils/errors-messages-statuses");
 
-//TODO: refactor controllers to remove handleFindReq functions
-
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => {
@@ -38,6 +36,7 @@ module.exports.login = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
+      console.log(token);
       const id = mongoose.Types.ObjectId(user._id).toString();
       res.send({
         token,
