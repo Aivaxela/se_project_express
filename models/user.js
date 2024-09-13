@@ -1,12 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
-const SignInFailError = require("../errors/signin-fail");
-const BadRequestError = require("../errors/bad-request");
-const {
-  badRequestErrorMessage,
-  signinFailMessage,
-} = require("../utils/errors");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -50,18 +44,18 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
   password
 ) {
   if (!email || !password) {
-    throw new BadRequestError(badRequestErrorMessage);
+    return Promise.reject({ name: "DataMissing" });
   }
   return this.findOne({ email })
     .select("+password")
     .then((user) => {
       if (!user) {
-        throw new SignInFailError(signinFailMessage);
+        return Promise.reject({ name: "SignInFail" });
       }
 
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          throw new SignInFailError(signinFailMessage);
+          return Promise.reject({ name: "SignInFail" });
         }
 
         return user;

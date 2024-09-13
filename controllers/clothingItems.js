@@ -11,7 +11,7 @@ const {
   itemNotFoundMessage,
   castErrorMessage,
   validationErrorMessage,
-} = require("../utils/errors");
+} = require("../utils/errors-messages-statuses");
 
 //TODO: refactor controllers to remove handleFindReq functions
 
@@ -36,32 +36,32 @@ const handleFindReq = (itemQuery, req, next) =>
     });
 
 module.exports.getItems = (req, res, next) => {
-  const itemQuery = Item.find({}).populate("owner", {
-    name: 1,
-    _id: 1,
-    imageUrl: 1,
-  });
-  handleFindReq(itemQuery, req, next).then((items) =>
-    res.send({ data: items })
-  );
+  Item.find({})
+    .populate("owner", {
+      name: 1,
+      _id: 1,
+      imageUrl: 1,
+    })
+    .then((items) => res.send({ data: items }))
+    .catch(next);
 };
 
 module.exports.createItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
 
   Item.create({ name, weather, imageUrl, owner: req.user._id }).then((item) => {
-    const itemQuery = Item.findById(item._id).populate("owner", {
-      name: 1,
-      _id: 1,
-      imageUrl: 1,
-    });
-    handleFindReq(itemQuery, req, next).then((item) => {
-      if (item) res.send({ data: item });
-    });
+    Item.findById(item._id)
+      .populate("owner", {
+        name: 1,
+        _id: 1,
+        imageUrl: 1,
+      })
+      .then((item) => res.send({ data: item }))
+      .catch(next);
   });
 };
 
-module.exports.deleteItem = (req, res) => {
+module.exports.deleteItem = (req, res, next) => {
   const requestingUser = req.user._id;
 
   Item.findById(req.params.id)
@@ -72,15 +72,15 @@ module.exports.deleteItem = (req, res) => {
       error.name = "NotFoundError";
       throw error;
     })
-
     .then((item) => {
       const itemOwner = mongoose.Types.ObjectId(item.owner).toString();
 
       if (requestingUser === itemOwner) {
-        const itemQuery = Item.findByIdAndDelete({
+        Item.findByIdAndDelete({
           _id: req.params.id,
-        }).populate("owner", { name: 1, _id: 1, avatarUrl: 1 });
-        handleFindReq(itemQuery, res);
+        })
+          .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+          .then((item) => res.send({ data: item }));
       } else {
         res.status(forbidden).send({
           message: `Error code: ${forbidden}, Error message: ${forbiddenErrorMessage}`,
