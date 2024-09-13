@@ -25,7 +25,7 @@ module.exports.createItem = (req, res, next) => {
         _id: 1,
         imageUrl: 1,
       })
-      .then((item) => res.send({ data: item }))
+      .then((returnItem) => res.send({ data: returnItem }))
       .catch(next);
   });
 };
@@ -42,14 +42,16 @@ module.exports.deleteItem = (req, res, next) => {
       const itemOwner = mongoose.Types.ObjectId(item.owner).toString();
 
       if (requestingUser === itemOwner) {
-        Item.findByIdAndDelete({
+        return Item.findByIdAndDelete({
           _id: req.params.id,
         })
           .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
-          .then((item) => res.send({ data: item }));
-      } else {
-        return Promise.reject({ name: "Forbidden" });
+          .then((returnItem) => res.send({ data: returnItem }));
       }
+
+      const error = new Error();
+      error.name = "Forbidden";
+      return Promise.reject(error);
     })
     .catch(next);
 };

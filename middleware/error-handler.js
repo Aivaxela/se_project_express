@@ -13,7 +13,7 @@ const {
 } = require("../utils/errors-messages-statuses");
 
 module.exports.errorHandler = (err, req, res, next) => {
-  console.log(err);
+  console.error(err);
 
   if (err.code === 11000)
     throw new DuplicateItemError(duplicateEmailErrorMessage);

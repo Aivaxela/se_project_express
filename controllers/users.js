@@ -36,7 +36,6 @@ module.exports.login = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      console.log(token);
       const id = mongoose.Types.ObjectId(user._id).toString();
       res.send({
         token,

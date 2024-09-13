@@ -44,18 +44,24 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
   password
 ) {
   if (!email || !password) {
-    return Promise.reject({ name: "DataMissing" });
+    const error = new Error();
+    error.name = "DataMissing";
+    return Promise.reject(error);
   }
   return this.findOne({ email })
     .select("+password")
     .then((user) => {
       if (!user) {
-        return Promise.reject({ name: "SignInFail" });
+        const error = new Error();
+        error.name = "SignInFail";
+        return Promise.reject(error);
       }
 
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          return Promise.reject({ name: "SignInFail" });
+          const error = new Error();
+          error.name = "SignInFail";
+          return Promise.reject(error);
         }
 
         return user;
