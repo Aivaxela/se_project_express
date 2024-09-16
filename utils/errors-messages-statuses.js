@@ -3,6 +3,7 @@ module.exports = {
   validationErrorMessage: "Data failed validation",
   dataMissingErrorMessage: "Required data missing",
   signinFailErrorMessage: "Incorrect email or password",
+  badTokenErrorMessage: "Unauthorized",
   forbiddenErrorMessage: "Forbidden action",
   userNotFoundMessage: "User not found",
   itemNotFoundMessage: "Item not found",
