@@ -1,9 +1,8 @@
 module.exports = {
   castErrorMessage: "Invalid data format",
   validationErrorMessage: "Data failed validation",
-  dataMissingErrorMessage: "Required data missing",
   signinFailErrorMessage: "Incorrect email or password",
-  badTokenErrorMessage: "Unauthorized",
+  badTokenErrorMessage: "Unauthorized or invalid token",
   forbiddenErrorMessage: "Forbidden action",
   userNotFoundMessage: "User not found",
   itemNotFoundMessage: "Item not found",

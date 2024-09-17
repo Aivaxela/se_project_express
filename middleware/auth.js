@@ -2,8 +2,7 @@ const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../utils/config");
 
 module.exports.auth = (req, res, next) => {
-  let { authorization } = req.headers;
-  authorization = authorization.replace("Bearer ", "");
+  const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
     const error = new Error();

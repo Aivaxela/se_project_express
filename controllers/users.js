@@ -9,7 +9,7 @@ const { userNotFoundMessage } = require("../utils/errors-messages-statuses");
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => {
-      next(new NotFoundError(userNotFoundMessage));
+      throw new NotFoundError(userNotFoundMessage);
     })
     .then((item) => res.send({ data: item }))
     .catch(next);

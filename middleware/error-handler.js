@@ -8,13 +8,12 @@ const {
   signinFailErrorMessage,
   duplicateEmailErrorMessage,
   defaultErrorMessage,
-  dataMissingErrorMessage,
   forbiddenErrorMessage,
   badTokenErrorMessage,
 } = require("../utils/errors-messages-statuses");
 
 module.exports.errorHandler = (err, req, res, next) => {
-  // console.error(err);
+  // console.log(err);
 
   if (err.code === 11000)
     throw new DuplicateItemError(duplicateEmailErrorMessage);
@@ -28,14 +27,14 @@ module.exports.errorHandler = (err, req, res, next) => {
       throw new SignInFailError(signinFailErrorMessage);
     case "Unauthorized":
       throw new SignInFailError(badTokenErrorMessage);
-    case "DataMissing":
-      throw new BadRequestError(dataMissingErrorMessage);
     case "Forbidden":
       throw new ForbiddenError(forbiddenErrorMessage);
-
     default:
-      break;
+      next(err);
   }
+};
+
+module.exports.errorSender = (err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res.status(statusCode).send({
     message: statusCode === 500 ? defaultErrorMessage : message,

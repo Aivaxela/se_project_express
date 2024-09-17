@@ -45,7 +45,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
 ) {
   if (!email || !password) {
     const error = new Error();
-    error.name = "DataMissing";
+    error.name = "ValidationError";
     return Promise.reject(error);
   }
   return this.findOne({ email })

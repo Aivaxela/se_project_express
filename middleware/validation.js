@@ -83,7 +83,7 @@ module.exports.validateUserInfoOnUpdate = celebrate({
       "string.empty": 'The "name" field must be filled in',
     }),
 
-    avatarUrl: Joi.string().custom(validateURL).messages({
+    avatarUrl: Joi.string().allow("").custom(validateURL).messages({
       "string.uri": 'the "avatarUrl" field must be a valid url',
     }),
   }),
