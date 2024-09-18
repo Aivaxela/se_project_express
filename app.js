@@ -14,13 +14,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-// app.use(requestLogger);
+app.use(requestLogger);
 
 app.use("/users", require("./routes/users"));
 app.use("/items", require("./routes/clothingItems"));
 app.use("/", require("./routes/index"));
 
-// app.use(errorLogger);
+app.use(errorLogger);
 app.use(errors());
 app.use(errorHandler, errorSender);
 

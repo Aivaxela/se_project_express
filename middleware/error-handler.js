@@ -12,7 +12,7 @@ const {
   badTokenErrorMessage,
 } = require("../utils/errors-messages-statuses");
 
-module.exports.errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => {
   console.error(err);
 
   if (err.code === 11000)
@@ -34,9 +34,14 @@ module.exports.errorHandler = (err, req, res, next) => {
   }
 };
 
-module.exports.errorSender = (err, req, res, next) => {
+const errorSender = (err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res.status(statusCode).send({
     message: statusCode === 500 ? defaultErrorMessage : message,
   });
+};
+
+module.exports = {
+  errorHandler,
+  errorSender,
 };
