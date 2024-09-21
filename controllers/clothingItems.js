@@ -1,133 +1,79 @@
 const mongoose = require("mongoose");
 const Item = require("../models/clothingItem");
+const NotFoundError = require("../errors/not-found");
 
-const {
-  badRequest,
-  forbidden,
-  serverError,
-  itemNotFound,
-  defaultErrorMessage,
-  forbiddenErrorMessage,
-} = require("../utils/errors");
+const { itemNotFoundMessage } = require("../utils/errors-messages-statuses");
 
-const handleRequest = (itemQuery, res) => {
-  itemQuery
-    .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
-    })
-    .then((item) => {
-      res.send({ data: item });
-    })
-    .catch((err) => {
-      console.error(err);
-
-      switch (err.name) {
-        case "NotFoundError":
-          res.status(err.statusCode).send({
-            message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-          });
-          break;
-        case "CastError":
-          res.status(badRequest).send({
-            message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-          });
-          break;
-        default:
-          res.status(serverError).send({
-            message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-          });
-          break;
-      }
-    });
-};
-
-module.exports.getItems = (req, res) => {
+module.exports.getItems = (req, res, next) => {
   Item.find({})
-    .populate("owner")
+    .populate("owner", {
+      name: 1,
+      _id: 1,
+      imageUrl: 1,
+    })
     .then((items) => res.send({ data: items }))
-    .catch(() =>
-      res.status(serverError).send({ message: defaultErrorMessage })
-    );
+    .catch(next);
 };
 
-module.exports.createItem = (req, res) => {
+module.exports.createItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
 
-  Item.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) => res.send({ data: item }))
-    .catch((err) => {
-      console.error(err);
-
-      if (err.name === "ValidationError") {
-        res.status(badRequest).send({
-          message: `Error code: ${badRequest}, Error message: ${err.message}`,
-        });
-      } else {
-        res.status(serverError).send({
-          message: `Error code: ${serverError}, Error message: ${defaultErrorMessage}`,
-        });
-      }
-    });
+  Item.create({ name, weather, imageUrl, owner: req.user._id }).then((item) => {
+    Item.findById(item._id)
+      .populate("owner", {
+        name: 1,
+        _id: 1,
+        imageUrl: 1,
+      })
+      .then((returnItem) => res.send({ data: returnItem }))
+      .catch(next);
+  });
 };
 
-module.exports.deleteItem = (req, res) => {
+module.exports.deleteItem = (req, res, next) => {
   const requestingUser = req.user._id;
 
   Item.findById(req.params.id)
+
     .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = itemNotFound;
-      error.name = "NotFoundError";
-      throw error;
+      next(new NotFoundError(itemNotFoundMessage));
     })
     .then((item) => {
       const itemOwner = mongoose.Types.ObjectId(item.owner).toString();
 
       if (requestingUser === itemOwner) {
-        const itemQuery = Item.findByIdAndDelete({
+        return Item.findByIdAndDelete({
           _id: req.params.id,
-        });
-        handleRequest(itemQuery, res);
-      } else {
-        res.status(forbidden).send({
-          message: `Error code: ${forbidden}, Error message: ${forbiddenErrorMessage}`,
-        });
+        })
+          .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+          .then((returnItem) => res.send({ data: returnItem }));
       }
+
+      const error = new Error();
+      error.name = "Forbidden";
+      return Promise.reject(error);
     })
-    .catch((err) => {
-      if (err.name === "CastError") {
-        res.status(badRequest).send({
-          message: `Error code: ${badRequest}, Error reason: ${err.reason}`,
-        });
-      } else if (err.name === "NotFoundError") {
-        res.status(err.statusCode).send({
-          message: `Error code: ${err.statusCode}, Error message: ${err.message}`,
-        });
-      } else {
-        res.status(badRequest).send({
-          message: `Error code: ${badRequest}, Error message: ${defaultErrorMessage}`,
-        });
-      }
-    });
+    .catch(next);
 };
 
-module.exports.likeItem = (req, res) => {
-  const itemQuery = Item.findByIdAndUpdate(
+module.exports.likeItem = (req, res, next) => {
+  Item.findByIdAndUpdate(
     req.params.id,
     { $addToSet: { likes: req.user._id } },
     { new: true }
-  );
-  handleRequest(itemQuery, res);
+  )
+    .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+    .then((item) => res.send({ data: item }))
+    .catch(next);
 };
 
-module.exports.dislikeItem = (req, res) => {
-  const itemQuery = Item.findByIdAndUpdate(
+module.exports.dislikeItem = (req, res, next) => {
+  Item.findByIdAndUpdate(
     req.params.id,
     { $pull: { likes: req.user._id } },
     { new: true }
-  );
-  handleRequest(itemQuery, res);
+  )
+    .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+    .then((item) => res.send({ data: item }))
+    .catch(next);
 };
