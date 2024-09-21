@@ -7,7 +7,7 @@ module.exports.auth = (req, res, next) => {
   if (!authorization || !authorization.startsWith("Bearer ")) {
     const error = new Error();
     error.name = "Unauthorized";
-    next(error);
+    return next(error);
   }
 
   const token = authorization.replace("Bearer ", "");
@@ -18,6 +18,6 @@ module.exports.auth = (req, res, next) => {
     req.user = payload;
     return next();
   } catch (err) {
-    next(err);
+    return next(err);
   }
 };

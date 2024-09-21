@@ -1,8 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { errorHandler, errorSender } = require("./middleware/error-handler");
 const { errors } = require("celebrate");
+const { errorHandler, errorSender } = require("./middleware/error-handler");
 const { requestLogger, errorLogger } = require("./middleware/logger");
 
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
