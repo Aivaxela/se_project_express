@@ -1,8 +1,13 @@
 const mongoose = require("mongoose");
 const Item = require("../models/clothingItem");
 const NotFoundError = require("../errors/not-found");
+const ForbiddenError = require("../errors/forbidden");
 
-const { itemNotFoundMessage } = require("../utils/errors-messages-statuses");
+const {
+  itemNotFoundMessage,
+  userNotFoundMessage,
+  forbiddenErrorMessage,
+} = require("../utils/errors-messages-statuses");
 
 module.exports.getItems = (req, res, next) => {
   Item.find({})
@@ -34,7 +39,6 @@ module.exports.deleteItem = (req, res, next) => {
   const requestingUser = req.user._id;
 
   Item.findById(req.params.id)
-
     .orFail(() => {
       next(new NotFoundError(itemNotFoundMessage));
     })
@@ -49,9 +53,7 @@ module.exports.deleteItem = (req, res, next) => {
           .then((returnItem) => res.send({ data: returnItem }));
       }
 
-      const error = new Error();
-      error.name = "Forbidden";
-      return Promise.reject(error);
+      return Promise.reject(new ForbiddenError(forbiddenErrorMessage));
     })
     .catch(next);
 };
@@ -62,6 +64,9 @@ module.exports.likeItem = (req, res, next) => {
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
+    .orFail(() => {
+      next(new NotFoundError(userNotFoundMessage));
+    })
     .populate("owner", { name: 1, _id: 1, avatar: 1 })
     .then((item) => res.send({ data: item }))
     .catch(next);
@@ -73,6 +78,9 @@ module.exports.dislikeItem = (req, res, next) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   )
+    .orFail(() => {
+      next(new NotFoundError(userNotFoundMessage));
+    })
     .populate("owner", { name: 1, _id: 1, avatar: 1 })
     .then((item) => res.send({ data: item }))
     .catch(next);
