@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const SignInFailError = require("../errors/signin-fail");
+const { signinFailErrorMessage } = require("../utils/errors-messages-statuses");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -50,16 +52,12 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
     .select("+password")
     .then((user) => {
       if (!user) {
-        const error = new Error();
-        error.name = "SignInFail";
-        return Promise.reject(error);
+        return Promise.reject(new SignInFailError(signinFailErrorMessage));
       }
 
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
-          const error = new Error();
-          error.name = "SignInFail";
-          return Promise.reject(error);
+          return Promise.reject(new SignInFailError(signinFailErrorMessage));
         }
 
         return user;
