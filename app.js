@@ -17,6 +17,13 @@ app.use(cors());
 
 app.use(requestLogger);
 
+//TODO: remove after review passes
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Server will crash now");
+  }, 0);
+});
+
 app.use("/users", require("./routes/users"));
 app.use("/items", require("./routes/clothingItems"));
 app.use("/", require("./routes/index"));
