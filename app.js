@@ -17,7 +17,7 @@ app.use(cors());
 
 app.use(requestLogger);
 
-//TODO: remove after review passes
+// TODO: remove after review passes
 app.get("/crash-test", () => {
   setTimeout(() => {
     throw new Error("Server will crash now");
