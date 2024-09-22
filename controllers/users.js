@@ -20,7 +20,7 @@ module.exports.updateProfile = (req, res, next) => {
     req.user._id,
     {
       name: req.body.name,
-      avatarUrl: req.body.avatarUrl,
+      avatar: req.body.avatar,
     },
     { returnDocument: "after", runValidators: true }
   )
@@ -41,7 +41,7 @@ module.exports.login = (req, res, next) => {
       res.send({
         token,
         name: user.name,
-        avatarUrl: user.avatarUrl,
+        avatar: user.avatar,
         id,
       });
     })
@@ -49,10 +49,10 @@ module.exports.login = (req, res, next) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, avatarUrl, email, password } = req.body;
+  const { name, avatar, email, password } = req.body;
 
   bcrypt.hash(password, 10).then((hash) =>
-    User.create({ name, avatarUrl, email: email.toLowerCase(), password: hash })
+    User.create({ name, avatar, email: email.toLowerCase(), password: hash })
       .then((user) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
@@ -60,7 +60,7 @@ module.exports.createUser = (req, res, next) => {
         res.send({
           token,
           name: user.name,
-          avatarUrl: user.avatarUrl,
+          avatar: user.avatar,
           email: user.email,
         });
       })

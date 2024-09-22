@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    minlength: 2,
     maxlength: 30,
     validate: {
       validator(value) {
@@ -25,10 +24,9 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8,
     select: false,
   },
-  avatarUrl: {
+  avatar: {
     type: String,
     validate: {
       validator(value) {

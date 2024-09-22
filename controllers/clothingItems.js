@@ -45,7 +45,7 @@ module.exports.deleteItem = (req, res, next) => {
         return Item.findByIdAndDelete({
           _id: req.params.id,
         })
-          .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+          .populate("owner", { name: 1, _id: 1, avatar: 1 })
           .then((returnItem) => res.send({ data: returnItem }));
       }
 
@@ -62,7 +62,7 @@ module.exports.likeItem = (req, res, next) => {
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
-    .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+    .populate("owner", { name: 1, _id: 1, avatar: 1 })
     .then((item) => res.send({ data: item }))
     .catch(next);
 };
@@ -73,7 +73,7 @@ module.exports.dislikeItem = (req, res, next) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   )
-    .populate("owner", { name: 1, _id: 1, avatarUrl: 1 })
+    .populate("owner", { name: 1, _id: 1, avatar: 1 })
     .then((item) => res.send({ data: item }))
     .catch(next);
 };
