@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 // app.use(helmet());
-app.use(limiter);
+// app.use(limiter);
 
 app.use(requestLogger);
 
