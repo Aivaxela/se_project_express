@@ -18,6 +18,7 @@ module.exports.auth = (req, res, next) => {
     req.user = payload;
     return next();
   } catch (err) {
+    err.name = "Unauthorized";
     return next(err);
   }
 };

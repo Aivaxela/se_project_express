@@ -9,4 +9,6 @@ module.exports = {
   pageNotFoundMessage: "Page not found",
   duplicateEmailErrorMessage: "This email address already exists",
   defaultErrorMessage: "An error has occurred on the server",
+  rateLimitReachedMessage:
+    "Request limit exceeded, please wait before trying again",
 };
