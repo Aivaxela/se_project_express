@@ -26,6 +26,7 @@ const errorHandler = (err, req, res, next) => {
     case "SignInFail":
       throw new SignInFailError(signinFailErrorMessage);
     case "Unauthorized":
+    case "JsonWebTokenError":
       throw new SignInFailError(badTokenErrorMessage);
     case "Forbidden":
       throw new ForbiddenError(forbiddenErrorMessage);
