@@ -93,7 +93,7 @@ module.exports.validateUserInfoOnUpdate = celebrate({
 
 module.exports.validateId = celebrate({
   params: Joi.object().keys({
-    _id: Joi.string().required().custom(validateId).messages({
+    id: Joi.string().required().custom(validateId).messages({
       "string.uri": "IDs must be a hexadecimal value length of 24 characters",
     }),
   }),
