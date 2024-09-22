@@ -37,7 +37,6 @@ module.exports.login = (req, res, next) => {
         expiresIn: "7d",
       });
 
-      console.log(token);
       const id = mongoose.Types.ObjectId(user._id).toString();
       res.send({
         token,
