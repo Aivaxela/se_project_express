@@ -4,7 +4,8 @@ const {
 } = require("../utils/errors-messages-statuses");
 const RateLimitExceeded = require("../errors/rate-limit-exceeded");
 
-const handleLimitReached = () => {
+const handleLimitReached = (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin");
   throw new RateLimitExceeded(rateLimitReachedMessage);
 };
 
