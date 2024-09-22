@@ -2,9 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const helmet = require("helmet");
+// const helmet = require("helmet");
 const { errors } = require("celebrate");
-const { limiter } = require("./middleware/limiter");
+// const { limiter } = require("./middleware/limiter");
 const { errorHandler, errorSender } = require("./middleware/error-handler");
 const { requestLogger, errorLogger } = require("./middleware/logger");
 
@@ -26,13 +26,6 @@ app.get("/crash-test", () => {
   setTimeout(() => {
     throw new Error("Server will crash now");
   }, 0);
-});
-
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  next();
 });
 
 app.use("/users", require("./routes/users"));
