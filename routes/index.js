@@ -10,7 +10,7 @@ const { pageNotFoundMessage } = require("../utils/errors-messages-statuses");
 router.post("/signin", validateUserLogin, login);
 router.post("/signup", validateNewUser, createUser);
 
-router.use((req, res) => {
+router.use(() => {
   throw new NotFoundError(pageNotFoundMessage);
 });
 
