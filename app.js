@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { limiter } = require("./middleware/rate-limiter");
 const { errors } = require("celebrate");
 const { errorHandler, errorSender } = require("./middleware/error-handler");
 const { requestLogger, errorLogger } = require("./middleware/logger");
@@ -14,6 +15,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(limiter);
 app.use(requestLogger);
 
 app.use("/users", require("./routes/users"));
